@@ -128,20 +128,55 @@ class Environment:
             op.append(np.max(list(d.values())))
         return op
 
+
+
     def inc_policy(self, state_action, n0):
         for s in state_action:
             epsilon = (n0 / (n0 + self.ns[s[0]]))
+
             if self.q[s[0].sample]['hit'] > self.q[s[0].sample]['stick']:
                 greedy_action = 'hit'
             elif self.q[s[0].sample]['hit'] < self.q[s[0].sample]['stick']:
                 greedy_action = 'stick'
             else:
                 greedy_action = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
+
             epsilon_action = np.random.choice(['random', 'greedy'], p=[epsilon, 1 - epsilon])
             if epsilon_action == 'random':
                 s[0].policy = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
             else:
                 s[0].policy = greedy_action
+
+    def inc_sarsa_q(self, sa: list, reward, param):
+        if sa[0].sample not in self.q.keys():
+            self.q[sa[0].sample] = {'hit': 0, 'stick': 0}
+            self.q[sa[0].sample][sa[1]] = (1-param) * ()
+        else:
+            self.q[sa[0].sample][sa[1]] += (1 / self.nsa[sa[0].sample][sa[1]]) * (reward - self.q[sa[0].sample][sa[1]])
+
+    def inc_sarsa_policy(self, sa: list, n0):
+
+        epsilon = (n0 / (n0 + self.ns[sa[0]]))
+
+        if self.q[sa[0].sample]['hit'] > self.q[sa[0].sample]['stick']:
+            greedy_action = 'hit'
+        elif self.q[sa[0].sample]['hit'] < self.q[sa[0].sample]['stick']:
+            greedy_action = 'stick'
+        else:
+            greedy_action = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
+
+        epsilon_action = np.random.choice(['random', 'greedy'], p=[epsilon, 1 - epsilon])
+
+        if epsilon_action == 'random':
+            sa[0].policy = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
+        else:
+            sa[0].policy = greedy_action
+
+    def get_lambda(self, episode: int):
+        params = {1000: 0, 2000: 0.1, 3000: 0.2, 4000: 0.3, 5000: 0.4, 6000: 0.5, 7000: 0.6, 8000: 0.7, 9000: 0.8, 10000: 0.9, 11000: 1}
+        for k in params.keys():
+            if episode < k:
+                return params[k]
 
 
 if __name__ == '__main__':
