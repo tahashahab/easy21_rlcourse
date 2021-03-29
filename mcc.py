@@ -6,13 +6,13 @@ import pandas as pd
 import time
 
 
-def mcc():
+def mcc(episodes: int):
     """Monte Carlo Control algorithm
     """
     n0 = 100
     env = Environment()
     tic = time.time()
-    for i in range(0, 500000):
+    for i in range(0, episodes):
         state = State()
         state_lst = [state]
         state_action = [[state, state.policy]]

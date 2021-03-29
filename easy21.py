@@ -56,6 +56,7 @@ class Environment:
         self.nsa = {}
         self.state_action = {}
         self.q = {}
+        self.e = {}
 
     def step(self, state: State, action):
         assert action in ['hit', 'stick'], 'Actions limited to hit or stick'
@@ -129,7 +130,6 @@ class Environment:
         return op
 
 
-
     def inc_policy(self, state_action, n0):
         for s in state_action:
             epsilon = (n0 / (n0 + self.ns[s[0]]))
@@ -147,36 +147,71 @@ class Environment:
             else:
                 s[0].policy = greedy_action
 
-    def inc_sarsa_q(self, sa: list, reward, param):
+    def inc_sarsa_ns(self, state: State):
+            if State not in self.ns.keys():
+                self.ns[state.sample] = 1
+            else:
+                self.ns[state.sample] += 1
+
+    def inc_sarsa_nsa(self, state_action: list):
+        if state_action[0].sample not in self.nsa.keys():
+            if state_action[1] == 'hit':
+                self.nsa[state_action[0].sample] = {'hit': 1, 'stick': 0}
+            else:
+                self.nsa[state_action[0].sample] = {'hit': 0, 'stick': 1}
+        else:
+            if state_action[1] == 'hit':
+                self.nsa[state_action[0].sample]['hit'] += 1
+            else:
+                self.nsa[state_action[0].sample]['stick'] += 1
+
+    def inc_sarsa_q(self, sa: list, tde):
         if sa[0].sample not in self.q.keys():
             self.q[sa[0].sample] = {'hit': 0, 'stick': 0}
-            self.q[sa[0].sample][sa[1]] = (1-param) * ()
-        else:
-            self.q[sa[0].sample][sa[1]] += (1 / self.nsa[sa[0].sample][sa[1]]) * (reward - self.q[sa[0].sample][sa[1]])
-
+        for key in self.q.keys():
+            self.q[key]['hit'] += (1/self.nsa[key]['hit']) * tde * (self.e[key]['hit'])
+            self.q[key]['stick'] += (1 / self.nsa[key]['stick']) * tde * (self.e[key]['stick'])
+#TODO fix sara policy so that it takes a state value to loop with so i can change the policies of the states
     def inc_sarsa_policy(self, sa: list, n0):
+        for key in self.q.keys():
+            epsilon = (n0 / (n0 + self.ns[key]))
 
-        epsilon = (n0 / (n0 + self.ns[sa[0]]))
+            if self.q[key]['hit'] > self.q[key]['stick']:
+                greedy_action = 'hit'
+            elif self.q[key]['hit'] < self.q[key]['stick']:
+                greedy_action = 'stick'
+            else:
+                greedy_action = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
 
-        if self.q[sa[0].sample]['hit'] > self.q[sa[0].sample]['stick']:
-            greedy_action = 'hit'
-        elif self.q[sa[0].sample]['hit'] < self.q[sa[0].sample]['stick']:
-            greedy_action = 'stick'
+            epsilon_action = np.random.choice(['random', 'greedy'], p=[epsilon, 1 - epsilon])
+
+            if epsilon_action == 'random':
+                sa[0].policy = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
+            else:
+                sa[0].policy = greedy_action
+
+    def inc_e_sa(self, state_action: list):
+        if state_action[0].sample not in self.e.keys():
+            self.e[state_action[0].sample] = {'hit': 0, 'stick': 0}
         else:
-            greedy_action = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
+            if state_action[1] == 'hit':
+                self.e[state_action[0].sample]['hit'] = self.e[state_action[0].sample]['hit'] + 1
+            else:
+                self.e[state_action[0].sample]['stick'] = self.e[state_action[0].sample]['stick'] + 1
 
-        epsilon_action = np.random.choice(['random', 'greedy'], p=[epsilon, 1 - epsilon])
+    def inc_e(self, param):
+        for key in self.e.keys():
+            self.e[key]['hit'] = param*self.e[key]['hit']
+            self.e[key]['stick'] = param*self.e[key]['stick']
 
-        if epsilon_action == 'random':
-            sa[0].policy = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
-        else:
-            sa[0].policy = greedy_action
-
-    def get_lambda(self, episode: int):
-        params = {1000: 0, 2000: 0.1, 3000: 0.2, 4000: 0.3, 5000: 0.4, 6000: 0.5, 7000: 0.6, 8000: 0.7, 9000: 0.8, 10000: 0.9, 11000: 1}
-        for k in params.keys():
-            if episode < k:
-                return params[k]
+    def td_error(self, state_action: list, reward, new_state: State):
+        qsa = 0
+        qsa_prime = 0
+        if state_action[0].sample in self.q.keys():
+            qsa = self.q[state_action[0].sample][state_action[1]]
+        if new_state.sample in self.q.keys():
+            qsa_prime = self.q[new_state.sample][new_state.policy]
+        return reward + qsa_prime + qsa
 
 
 if __name__ == '__main__':

@@ -8,31 +8,26 @@ def sarsa():
     env = Environment()
     tic = time.time()
     mse = []
-
-    for i in range(0, 11000):
-        param = env.get_lambda(i)
-        state = State()
-        state_lst = [state]
-        state_action = [[state, state.policy]]
-        g = 0
-        while True:
+    params = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+    for p in params:
+        for i in range(0, 1000):
+            g = 0
             state = State()
             state_lst = [state]
             state_action = [[state, state.policy]]
-            g = 0
             while True:
                 step = env.step(state_lst[-1], state_lst[-1].policy)
-                state_lst.append(step[0])
                 g += step[1]
-                if step[0].terminal:
+                env.inc_sarsa_ns(state_lst[-1])
+                env.inc_sarsa_nsa(state_action[-1])
+                td_error = env.td_error(state_action, reward=g, new_state=step[0])
+                env.inc_e_sa(state_action[-1])
+                env.inc_sarsa_q()
+                env.inc_sarsa_policy(state_action[-1], n0)
+                env.inc_e(param=p)
+                if step[0].is_terminal():
                     break
                 state_action.append([step[0], step[0].policy])
-                env.inc_ns(state_lst)
-                env.inc_nsa(state_action)
-                env.inc_sarsa_q(state_action[-1], reward=g, param=param)
-                env.inc_sarsa_policy(state_action[-1], n0)
-
-
     toc = time.time()
 
 
