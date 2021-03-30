@@ -48,6 +48,29 @@ def mcc(episodes: int):
     ax.set_title(f'Monte Carlo Control after 500,000 Episodes in {toc-tic:.2f} seconds')
     plt.show()
 
+def mcc2(episodes: int):
+    """Monte Carlo Control algorithm
+    """
+    n0 = 100
+    env = Environment()
+    for i in range(0, episodes):
+        state = State()
+        state_lst = [state]
+        state_action = [[state, state.policy]]
+        g = 0
+        while True:
+            step = env.step(state_lst[-1], state_lst[-1].policy)
+            state_lst.append(step[0])
+            g += step[1]
+            if step[0].terminal:
+                break
+            state_action.append([step[0], step[0].policy])
+        env.inc_ns(state_lst)
+        env.inc_nsa(state_action)
+        env.inc_q(state_action, reward=g)
+        env.inc_policy(state_action, n0)
+    return env.q
+
 
 if __name__ == '__main__':
-    print(mcc())
+    print(mcc2(episodes=1000))

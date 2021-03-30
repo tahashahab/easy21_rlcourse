@@ -129,7 +129,6 @@ class Environment:
             op.append(np.max(list(d.values())))
         return op
 
-
     def inc_policy(self, state_action, n0):
         for s in state_action:
             epsilon = (n0 / (n0 + self.ns[s[0]]))
@@ -167,12 +166,19 @@ class Environment:
 
     def inc_sarsa_q(self, sa: list, tde):
         if sa[0].sample not in self.q.keys():
-            self.q[sa[0].sample] = {'hit': 0, 'stick': 0}
+            self.q[sa[0].sample] = {'hit': 0, 'stick': 0, 'policy': sa[1]}
         for key in self.q.keys():
-            self.q[key]['hit'] += (1/self.nsa[key]['hit']) * tde * (self.e[key]['hit'])
-            self.q[key]['stick'] += (1 / self.nsa[key]['stick']) * tde * (self.e[key]['stick'])
-#TODO fix sara policy so that it takes a state value to loop with so i can change the policies of the states
-    def inc_sarsa_policy(self, sa: list, n0):
+            if self.e[key]['hit'] == 0:
+                pass
+            else:
+                self.q[key]['hit'] += (1/self.nsa[key]['hit']) * tde * (self.e[key]['hit'])
+
+            if self.e[key]['stick'] == 0:
+                pass
+            else:
+                self.q[key]['stick'] += (1/self.nsa[key]['stick']) * tde * (self.e[key]['stick'])
+
+    def inc_sarsa_policy(self, n0):
         for key in self.q.keys():
             epsilon = (n0 / (n0 + self.ns[key]))
 
@@ -186,18 +192,18 @@ class Environment:
             epsilon_action = np.random.choice(['random', 'greedy'], p=[epsilon, 1 - epsilon])
 
             if epsilon_action == 'random':
-                sa[0].policy = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
+                self.q[key]['policy'] = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
             else:
-                sa[0].policy = greedy_action
+                self.q[key]['policy'] = greedy_action
 
     def inc_e_sa(self, state_action: list):
         if state_action[0].sample not in self.e.keys():
             self.e[state_action[0].sample] = {'hit': 0, 'stick': 0}
         else:
             if state_action[1] == 'hit':
-                self.e[state_action[0].sample]['hit'] = self.e[state_action[0].sample]['hit'] + 1
+                self.e[state_action[0].sample]['hit'] += 1
             else:
-                self.e[state_action[0].sample]['stick'] = self.e[state_action[0].sample]['stick'] + 1
+                self.e[state_action[0].sample]['stick'] += 1
 
     def inc_e(self, param):
         for key in self.e.keys():
@@ -211,7 +217,7 @@ class Environment:
             qsa = self.q[state_action[0].sample][state_action[1]]
         if new_state.sample in self.q.keys():
             qsa_prime = self.q[new_state.sample][new_state.policy]
-        return reward + qsa_prime + qsa
+        return reward + qsa_prime - qsa
 
 
 if __name__ == '__main__':
