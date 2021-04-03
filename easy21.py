@@ -57,6 +57,12 @@ class Environment:
         self.state_action = {}
         self.q = {}
         self.e = {}
+        self.features = {'dealer': [[1, 4], [4, 7], [7, 10]],
+                         'player': [[1, 6], [4, 9], [7, 12], [10, 15], [13, 18],
+                                    [16, 21]],
+                         'action': ['hit', 'stick']}
+        self.w = np.zeros((2, 6, 3))
+        self.lfa_e = np.zeros((2, 6, 3))
 
     def step(self, state: State, action):
         assert action in ['hit', 'stick'], 'Actions limited to hit or stick'
@@ -216,8 +222,40 @@ class Environment:
         if state_action[0].sample in self.q.keys():
             qsa = self.q[state_action[0].sample][state_action[1]]
         if new_state.sample in self.q.keys():
-            qsa_prime = self.q[new_state.sample][new_state.policy]
+            qsa_prime = self.q[new_state.sample][self.q[new_state.sample]['policy']]
         return reward + qsa_prime - qsa
+
+    def inc_lfa_q(self, sa: list, tde):
+        if sa[0].sample not in self.q.keys():
+            self.q[sa[0].sample] = {'hit': 0, 'stick': 0, 'policy': sa[1]}
+        for key in self.q.keys():
+            if self.e[key]['hit'] == 0:
+                pass
+            else:
+                self.q[key]['hit'] += 0.01 * tde * (self.e[key]['hit'])
+
+            if self.e[key]['stick'] == 0:
+                pass
+            else:
+                self.q[key]['stick'] += 0.01 * tde * (self.e[key]['stick'])
+
+    def inc_lfa_policy(self):
+        epsilon = 0.05
+        for key in self.q.keys():
+
+            if self.q[key]['hit'] > self.q[key]['stick']:
+                greedy_action = 'hit'
+            elif self.q[key]['hit'] < self.q[key]['stick']:
+                greedy_action = 'stick'
+            else:
+                greedy_action = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
+
+            epsilon_action = np.random.choice(['random', 'greedy'], p=[epsilon, 1 - epsilon])
+
+            if epsilon_action == 'random':
+                self.q[key]['policy'] = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
+            else:
+                self.q[key]['policy'] = greedy_action
 
 
 if __name__ == '__main__':
