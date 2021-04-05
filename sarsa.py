@@ -19,6 +19,7 @@ def sarsa():
         tic2 = time.time()
         env = Environment()
         for i in range(0, 1000):
+            env.e = {}
             g = 0
             state = State()
             state_lst = [state]
@@ -80,7 +81,7 @@ def get_mse(q, mcc):
             mcc[key] = {'hit': 0, 'stick': 0}
         mse += (q[key]['hit'] - mcc[key]['hit'])**2
         mse += (q[key]['stick'] - mcc[key]['stick'])**2
-        count += 1
+        count += 2
     return mse/count
 
 

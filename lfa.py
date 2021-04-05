@@ -6,6 +6,7 @@ import time
 from sarsa import *
 from mcc import *
 
+
 def lfa():
     tic = time.time()
     mse = []
@@ -13,41 +14,35 @@ def lfa():
     mse_1 = []
     params = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
     mcc = mcc2(1000)
+
     for p in params:
         tic2 = time.time()
         env = Environment()
         for i in range(0, 100):
+            env.lfa_e = np.zeros((2, 6, 3))
             g = 0
             state = State()
             state_lst = [state]
-            if state.sample not in env.q.keys():
-                state_action = [[state, state.policy]]
-            else:
-                state_action = [[state, env.q[state.sample]['policy']]]
+            state_action = [[state, env.get_action(state)]]
             while True:
-                if state_lst[-1].sample not in env.q.keys():
-                    step = env.step(state_lst[-1], state_lst[-1].policy)
-                else:
-                    step = env.step(state_lst[-1], env.q[state_lst[-1].sample]['policy'])
+                step = env.step(state_lst[-1], env.get_action(state_lst[-1]))
                 g += step[1]
-                td_error = env.td_error(state_action[-1], reward=g, new_state=step[0])
-                env.inc_e_sa(state_action[-1])
-                env.inc_lfa_q(state_action[-1], tde=td_error)
+                phi = env.get_feature(state_action[-1])
+                td_error = env.lfa_td_error(state_action[-1], reward=g, new_state=step[0])
+                env.inc_lfa_e(state_action[-1])
+                env.inc_lfa_q(phi)
                 env.inc_lfa_policy()
-                env.inc_e(param=p)
+                env.lfa_e *= p
+                env.inc_w(td_error)
                 if step[0].terminal:
                     break
                 state_lst.append(step[0])
-                if step[0].sample in env.q.keys():
-                    state_action.append(
-                        [step[0], env.q[step[0].sample]['policy']])
-                else:
-                    state_action.append([step[0], step[0].sample])
+                state_action.append([step[0], env.get_action(step[0])])
             if p == 0:
-                mse_0.append(get_mse(env.q, mcc))
+                mse_0.append(env.get_lfa_mse(mcc=mcc))
             if p == 1:
-                mse_1.append(get_mse(env.q, mcc))
-        mse.append(get_mse(env.q, mcc))
+                mse_1.append(env.get_lfa_mse(mcc=mcc))
+        mse.append(env.get_lfa_mse(mcc=mcc))
         toc2 = time.time()
         print(f'{toc2 - tic2:.2f} seconds for {p}')
     toc = time.time()
@@ -72,4 +67,4 @@ def lfa():
 
 
 if __name__ == '__main__':
-    pass
+    print(lfa())

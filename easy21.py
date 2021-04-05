@@ -63,6 +63,8 @@ class Environment:
                          'action': ['hit', 'stick']}
         self.w = np.zeros((2, 6, 3))
         self.lfa_e = np.zeros((2, 6, 3))
+        self.lfa_q = np.zeros((2, 6, 3))
+        self.policy = np.zeros((6, 3))
 
     def step(self, state: State, action):
         assert action in ['hit', 'stick'], 'Actions limited to hit or stick'
@@ -174,15 +176,13 @@ class Environment:
         if sa[0].sample not in self.q.keys():
             self.q[sa[0].sample] = {'hit': 0, 'stick': 0, 'policy': sa[1]}
         for key in self.q.keys():
-            if self.e[key]['hit'] == 0:
-                pass
+            if key not in self.e.keys():
+                continue
             else:
-                self.q[key]['hit'] += (1/self.nsa[key]['hit']) * tde * (self.e[key]['hit'])
-
-            if self.e[key]['stick'] == 0:
-                pass
-            else:
-                self.q[key]['stick'] += (1/self.nsa[key]['stick']) * tde * (self.e[key]['stick'])
+                if self.nsa[key]['hit'] > 0:
+                    self.q[key]['hit'] += (1/self.nsa[key]['hit']) * tde * (self.e[key]['hit'])
+                if self.nsa[key]['stick'] > 0:
+                    self.q[key]['stick'] += (1/self.nsa[key]['stick']) * tde * (self.e[key]['stick'])
 
     def inc_sarsa_policy(self, n0):
         for key in self.q.keys():
@@ -225,37 +225,88 @@ class Environment:
             qsa_prime = self.q[new_state.sample][self.q[new_state.sample]['policy']]
         return reward + qsa_prime - qsa
 
-    def inc_lfa_q(self, sa: list, tde):
-        if sa[0].sample not in self.q.keys():
-            self.q[sa[0].sample] = {'hit': 0, 'stick': 0, 'policy': sa[1]}
-        for key in self.q.keys():
-            if self.e[key]['hit'] == 0:
-                pass
-            else:
-                self.q[key]['hit'] += 0.01 * tde * (self.e[key]['hit'])
-
-            if self.e[key]['stick'] == 0:
-                pass
-            else:
-                self.q[key]['stick'] += 0.01 * tde * (self.e[key]['stick'])
+    def inc_lfa_q(self, phi: list):
+        self.lfa_q[phi[0], phi[1], phi[2]] = self.w[phi[0], phi[1], phi[2]]
 
     def inc_lfa_policy(self):
         epsilon = 0.05
-        for key in self.q.keys():
 
-            if self.q[key]['hit'] > self.q[key]['stick']:
-                greedy_action = 'hit'
-            elif self.q[key]['hit'] < self.q[key]['stick']:
-                greedy_action = 'stick'
-            else:
-                greedy_action = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
+        for dealer_index, player_list in enumerate(self.policy):
+            for player_index, policy_value in enumerate(player_list):
+                if self.lfa_q[0, dealer_index, player_index] > self.lfa_q[1, dealer_index, player_index]:
+                    greedy_action = 0
+                elif self.lfa_q[0, dealer_index, player_index] < self.lfa_q[1, dealer_index, player_index]:
+                    greedy_action = 1
+                else:
+                    greedy_action = np.random.choice([0, 1], p=[0.5, 0.5])
 
-            epsilon_action = np.random.choice(['random', 'greedy'], p=[epsilon, 1 - epsilon])
+                epsilon_action = np.random.choice(['random', 'greedy'], p=[epsilon, 1 - epsilon])
+                if epsilon_action == 'random':
+                    self.policy[dealer_index, player_index] = np.random.choice([0, 1], p=[0.5, 0.5])
+                else:
+                    self.policy[dealer_index, player_index] = greedy_action
 
-            if epsilon_action == 'random':
-                self.q[key]['policy'] = np.random.choice(['hit', 'stick'], p=[0.5, 0.5])
-            else:
-                self.q[key]['policy'] = greedy_action
+    def lfa_td_error(self, state_action: list, reward, new_state: State):
+        phi = self.get_feature(state_action)
+        phi_prime = self.get_feature([new_state, self.get_action(new_state)])
+        qsa = self.lfa_q[phi[0], phi[1], phi[2]]
+        qsa_prime = self.lfa_q[phi_prime[0], phi_prime[1], phi_prime[2]]
+        return reward + qsa_prime - qsa
+
+    def get_feature(self, sa: list):
+        if sa[1] == 'hit':
+            action_index = 0
+        else:
+            action_index = 1
+        phi = np.zeros((2, 6, 3))
+        for dealer_index, dealer_list in enumerate(self.features['dealer']):
+            if dealer_list[0] <= sa[0].dealer <= dealer_list[1]:
+                for player_index, player_list in enumerate(self.features['player']):
+                    if player_list[0] <= sa[0].player <= player_list[1]:
+                        phi = [action_index, dealer_index, player_index]
+        return phi
+
+    def inc_lfa_e(self, sa: list):
+        if sa[1] == 'hit':
+            action_index = 0
+        else:
+            action_index = 1
+        for dealer_index, dealer_list in enumerate(self.features['dealer']):
+            if dealer_list[0] <= sa[0].dealer <= dealer_list[1]:
+                for player_index, player_list in enumerate(self.features['player']):
+                    if player_list[0] <= sa[0].player <= player_list[1]:
+                        self.lfa_e[action_index, dealer_index, player_index] += 1
+
+    def inc_w(self, td_error):
+        self.w = 0.01 * td_error * self.lfa_e
+
+    def get_action(self, state: State):
+        for dealer_index, dealer_list in enumerate(self.features['dealer']):
+            if dealer_list[0] <= state.dealer <= dealer_list[1]:
+                for player_index, player_list in enumerate(self.features['player']):
+                    if player_list[0] <= state.player <= player_list[1]:
+                        if self.policy[dealer_index, player_index] == 0:
+                            action = 'hit'
+                        else:
+                            action = 'stick'
+        return action
+
+    def get_lfa_mse(self, mcc):
+        mse = 0
+        count = 0
+        for key in mcc.keys():
+            player = int(key.split(',')[0].split(' ')[1])
+            dealer = int(key.split(',')[1].split(' ')[2])
+            for dealer_index, dealer_list in enumerate(self.features['dealer']):
+                if dealer_list[0] <= dealer <= dealer_list[1]:
+                    for player_index, player_list in enumerate(self.features['player']):
+                        if player_list[0] <= player <= player_list[1]:
+                            phi = [dealer_index, player_index]
+
+            mse += (self.lfa_q[0, phi[0], phi[1]] - mcc[key]['hit']) ** 2
+            mse += (self.lfa_q[1, phi[0], phi[1]] - mcc[key]['stick']) ** 2
+            count += 2
+        return mse / count
 
 
 if __name__ == '__main__':
