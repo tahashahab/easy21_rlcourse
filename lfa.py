@@ -22,21 +22,23 @@ def lfa():
             env.lfa_e = np.zeros((2, 6, 3))
             g = 0
             state = State()
-            state_lst = [state]
             state_action = [[state, env.get_action(state)]]
             while True:
-                step = env.step(state_lst[-1], env.get_action(state_lst[-1]))
+                #print(state_action[-1][0].sample, state_action[-1][1])
+                step = env.step(state_action[-1][0], state_action[-1][1])
                 g += step[1]
+                print(state_action[-1][0].sample, state_action[-1][1])
                 phi = env.get_feature(state_action[-1])
+                print(phi)
                 td_error = env.lfa_td_error(state_action[-1], reward=g, new_state=step[0])
                 env.inc_lfa_e(state_action[-1])
                 env.inc_lfa_q(phi)
                 env.inc_lfa_policy()
                 env.lfa_e *= p
                 env.inc_w(td_error)
+                #print(step[0].sample)
                 if step[0].terminal:
                     break
-                state_lst.append(step[0])
                 state_action.append([step[0], env.get_action(step[0])])
             if p == 0:
                 mse_0.append(env.get_lfa_mse(mcc=mcc))

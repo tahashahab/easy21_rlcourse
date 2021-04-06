@@ -65,7 +65,7 @@ class Environment:
         self.lfa_e = np.zeros((2, 6, 3))
         self.lfa_q = np.zeros((2, 6, 3))
         self.policy = np.zeros((6, 3))
-
+#TODO find out why step changes state after stick
     def step(self, state: State, action):
         assert action in ['hit', 'stick'], 'Actions limited to hit or stick'
         if state.terminal:
@@ -231,41 +231,43 @@ class Environment:
     def inc_lfa_policy(self):
         epsilon = 0.05
 
-        for dealer_index, player_list in enumerate(self.policy):
-            for player_index, policy_value in enumerate(player_list):
-                if self.lfa_q[0, dealer_index, player_index] > self.lfa_q[1, dealer_index, player_index]:
+        for dealer_index, dealer_list in enumerate(self.features['dealer']):
+            for player_index, player_list in enumerate(self.features['player']):
+                if self.lfa_q[0, player_index, dealer_index] > self.lfa_q[1, player_index, dealer_index]:
                     greedy_action = 0
-                elif self.lfa_q[0, dealer_index, player_index] < self.lfa_q[1, dealer_index, player_index]:
+                elif self.lfa_q[0, player_index, dealer_index] < self.lfa_q[1, player_index, dealer_index]:
                     greedy_action = 1
                 else:
                     greedy_action = np.random.choice([0, 1], p=[0.5, 0.5])
 
                 epsilon_action = np.random.choice(['random', 'greedy'], p=[epsilon, 1 - epsilon])
                 if epsilon_action == 'random':
-                    self.policy[dealer_index, player_index] = np.random.choice([0, 1], p=[0.5, 0.5])
+                    self.policy[player_index, dealer_index] = np.random.choice([0, 1], p=[0.5, 0.5])
                 else:
-                    self.policy[dealer_index, player_index] = greedy_action
+                    self.policy[player_index, dealer_index] = greedy_action
 
     def lfa_td_error(self, state_action: list, reward, new_state: State):
         phi = self.get_feature(state_action)
         phi_prime = self.get_feature([new_state, self.get_action(new_state)])
+        print(phi)
         qsa = self.lfa_q[phi[0], phi[1], phi[2]]
         qsa_prime = self.lfa_q[phi_prime[0], phi_prime[1], phi_prime[2]]
         return reward + qsa_prime - qsa
 
     def get_feature(self, sa: list):
+        #print(sa[0].sample)
         if sa[1] == 'hit':
             action_index = 0
         else:
             action_index = 1
-        phi = np.zeros((2, 6, 3))
+        print(sa[0].player, sa[0].dealer)
         for dealer_index, dealer_list in enumerate(self.features['dealer']):
             if dealer_list[0] <= sa[0].dealer <= dealer_list[1]:
                 for player_index, player_list in enumerate(self.features['player']):
                     if player_list[0] <= sa[0].player <= player_list[1]:
-                        phi = [action_index, dealer_index, player_index]
-        return phi
+                        return [action_index, player_index, dealer_index]
 
+        return 'fuck'
     def inc_lfa_e(self, sa: list):
         if sa[1] == 'hit':
             action_index = 0
@@ -275,7 +277,7 @@ class Environment:
             if dealer_list[0] <= sa[0].dealer <= dealer_list[1]:
                 for player_index, player_list in enumerate(self.features['player']):
                     if player_list[0] <= sa[0].player <= player_list[1]:
-                        self.lfa_e[action_index, dealer_index, player_index] += 1
+                        self.lfa_e[action_index, player_index, dealer_index] += 1
 
     def inc_w(self, td_error):
         self.w = 0.01 * td_error * self.lfa_e
@@ -285,11 +287,11 @@ class Environment:
             if dealer_list[0] <= state.dealer <= dealer_list[1]:
                 for player_index, player_list in enumerate(self.features['player']):
                     if player_list[0] <= state.player <= player_list[1]:
-                        if self.policy[dealer_index, player_index] == 0:
+                        if self.policy[player_index, dealer_index] == 0:
                             action = 'hit'
                         else:
                             action = 'stick'
-        return action
+                        return action
 
     def get_lfa_mse(self, mcc):
         mse = 0
@@ -301,7 +303,7 @@ class Environment:
                 if dealer_list[0] <= dealer <= dealer_list[1]:
                     for player_index, player_list in enumerate(self.features['player']):
                         if player_list[0] <= player <= player_list[1]:
-                            phi = [dealer_index, player_index]
+                            phi = [player_index, dealer_index]
 
             mse += (self.lfa_q[0, phi[0], phi[1]] - mcc[key]['hit']) ** 2
             mse += (self.lfa_q[1, phi[0], phi[1]] - mcc[key]['stick']) ** 2
