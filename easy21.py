@@ -71,26 +71,28 @@ class Environment:
         if state.terminal:
             raise TerminalStateError
         elif action == 'hit':
-            state.player += draw()
-            if state.player < 1 or state.player > 21:
-                new_player = state.player
+            player = state.player
+            player += draw()
+            if player < 1 or player > 21:
+                new_player = player
                 new_dealer = state.dealer
                 next_state = State(player=new_player, dealer=new_dealer)
                 reward = -1
                 next_state.is_terminal()
                 return next_state, reward, 'Terminal'
             else:
-                new_player = state.player
+                new_player = player
                 new_dealer = state.dealer
                 next_state = State(player=new_player, dealer=new_dealer)
                 reward = 0
                 return next_state, reward, 'Non-Terminal'
         else:
-            while 0 < state.dealer <= 17:
-                state.dealer += draw()
-            if state.dealer < 1 or state.dealer > 21:
+            dealer = state.dealer
+            while 0 < dealer <= 17:
+                dealer += draw()
+            if dealer < 1 or dealer > 21:
                 new_player = state.player
-                new_dealer = state.dealer
+                new_dealer = dealer
                 next_state = State(player=new_player, dealer=new_dealer)
                 reward = 1
                 next_state.is_terminal()
@@ -249,25 +251,25 @@ class Environment:
     def lfa_td_error(self, state_action: list, reward, new_state: State):
         phi = self.get_feature(state_action)
         phi_prime = self.get_feature([new_state, self.get_action(new_state)])
-        print(phi)
+#        print(phi)
         qsa = self.lfa_q[phi[0], phi[1], phi[2]]
-        qsa_prime = self.lfa_q[phi_prime[0], phi_prime[1], phi_prime[2]]
+        if new_state.terminal:
+            qsa_prime = 0
+        else:
+            qsa_prime = self.lfa_q[phi_prime[0], phi_prime[1], phi_prime[2]]
         return reward + qsa_prime - qsa
 
     def get_feature(self, sa: list):
-        #print(sa[0].sample)
         if sa[1] == 'hit':
             action_index = 0
         else:
             action_index = 1
-        print(sa[0].player, sa[0].dealer)
         for dealer_index, dealer_list in enumerate(self.features['dealer']):
             if dealer_list[0] <= sa[0].dealer <= dealer_list[1]:
                 for player_index, player_list in enumerate(self.features['player']):
                     if player_list[0] <= sa[0].player <= player_list[1]:
                         return [action_index, player_index, dealer_index]
 
-        return 'fuck'
     def inc_lfa_e(self, sa: list):
         if sa[1] == 'hit':
             action_index = 0
@@ -288,10 +290,9 @@ class Environment:
                 for player_index, player_list in enumerate(self.features['player']):
                     if player_list[0] <= state.player <= player_list[1]:
                         if self.policy[player_index, dealer_index] == 0:
-                            action = 'hit'
+                            return 'hit'
                         else:
-                            action = 'stick'
-                        return action
+                            return'stick'
 
     def get_lfa_mse(self, mcc):
         mse = 0

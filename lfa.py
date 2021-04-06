@@ -18,23 +18,24 @@ def lfa():
     for p in params:
         tic2 = time.time()
         env = Environment()
-        for i in range(0, 100):
+        for i in range(0, 1000):
             env.lfa_e = np.zeros((2, 6, 3))
             g = 0
             state = State()
             state_action = [[state, env.get_action(state)]]
             while True:
-                #print(state_action[-1][0].sample, state_action[-1][1])
+                phi_ = np.zeros((2, 6, 3))
                 step = env.step(state_action[-1][0], state_action[-1][1])
                 g += step[1]
-                print(state_action[-1][0].sample, state_action[-1][1])
                 phi = env.get_feature(state_action[-1])
-                print(phi)
                 td_error = env.lfa_td_error(state_action[-1], reward=g, new_state=step[0])
                 env.inc_lfa_e(state_action[-1])
                 env.inc_lfa_q(phi)
                 env.inc_lfa_policy()
-                env.lfa_e *= p
+                if p == 0:
+                    env.lfa_e[phi[0], phi[1], phi[2]] = 1
+                else:
+                    env.lfa_e *= p
                 env.inc_w(td_error)
                 #print(step[0].sample)
                 if step[0].terminal:
@@ -54,15 +55,15 @@ def lfa():
     fig, axes = plt.subplots()
     sns.lineplot(x=params, y=mse, ax=axes)
     axes.set(xlabel='Lambda', ylabel='Mean-Squared Error',
-             title='MSE of each Lambda')
+             title='MSE of Sarsa(lambda) Linear Function Approximation')
     plt.show()
 
     f, ax = plt.subplots(nrows=2, ncols=1, figsize=(10, 6))
-    sns.lineplot(x=np.arange(0, 100), y=mse_0, ax=ax[0])
+    sns.lineplot(x=np.arange(0, 1000), y=mse_0, ax=ax[0])
     ax[0].set(xlabel='Episodes', ylabel='Mean-Squared Error',
-              title='Lambda = 0,1 Learning Curves')
+              title='Lambda = 0,1 Learning Curves Linear Function Approximation')
     ax[0].legend(['Lambda = 0'])
-    sns.lineplot(x=np.arange(0, 100), y=mse_1, ax=ax[1])
+    sns.lineplot(x=np.arange(0, 1000), y=mse_1, ax=ax[1])
     ax[1].set(xlabel='Episodes', ylabel='Mean-Squared Error')
     ax[1].legend(['Lambda = 1'])
     plt.show()

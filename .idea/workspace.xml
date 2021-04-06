@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="370d312c-29bd-4fcf-834d-e533afbd2127" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/easy21.py" beforeDir="false" afterPath="$PROJECT_DIR$/easy21.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lfa.py" beforeDir="false" afterPath="$PROJECT_DIR$/lfa.py" afterDir="false" />
     </list>
@@ -13,20 +14,20 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/easy21.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="332">
-              <caret line="267" lean-forward="true" selection-start-line="267" selection-end-line="267" />
+            <state relative-caret-position="475">
+              <caret line="312" lean-forward="true" selection-start-line="312" selection-end-line="312" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lfa.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="85">
-              <caret line="26" column="17" selection-start-line="26" selection-start-column="17" selection-end-line="26" selection-end-column="17" />
+            <state relative-caret-position="-931">
+              <caret line="2" column="18" lean-forward="true" selection-start-line="2" selection-start-column="18" selection-end-line="2" selection-end-column="18" />
             </state>
           </provider>
         </entry>
@@ -34,7 +35,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/sarsa.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1083">
+            <state relative-caret-position="1254">
               <caret line="85" lean-forward="true" selection-start-line="85" selection-end-line="85" />
             </state>
           </provider>
@@ -61,8 +62,8 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>get_feature</find>
-      <find>get_fe</find>
       <find>get_f</find>
+      <find>get_fe</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -240,7 +241,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" weight="0.24920969" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -291,22 +291,22 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/sarsa.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1083">
+        <state relative-caret-position="1254">
           <caret line="85" lean-forward="true" selection-start-line="85" selection-end-line="85" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lfa.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="85">
-          <caret line="26" column="17" selection-start-line="26" selection-start-column="17" selection-end-line="26" selection-end-column="17" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/easy21.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="332">
-          <caret line="267" lean-forward="true" selection-start-line="267" selection-end-line="267" />
+        <state relative-caret-position="475">
+          <caret line="312" lean-forward="true" selection-start-line="312" selection-end-line="312" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lfa.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-931">
+          <caret line="2" column="18" lean-forward="true" selection-start-line="2" selection-start-column="18" selection-end-line="2" selection-end-column="18" />
         </state>
       </provider>
     </entry>
