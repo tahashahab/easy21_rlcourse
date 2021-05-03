@@ -65,7 +65,7 @@ class Environment:
         self.lfa_e = np.zeros((2, 6, 3))
         self.lfa_q = np.zeros((2, 6, 3))
         self.policy = np.zeros((6, 3))
-#TODO find out why step changes state after stick
+
     def step(self, state: State, action):
         assert action in ['hit', 'stick'], 'Actions limited to hit or stick'
         if state.terminal:
