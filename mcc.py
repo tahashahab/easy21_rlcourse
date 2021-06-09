@@ -1,4 +1,4 @@
-from easy21 import Environment, State
+from blackjack_variant import Environment, State
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits import mplot3d
@@ -53,7 +53,7 @@ def mcc2(episodes: int):
     """
     n0 = 100
     env = Environment()
-    for i in range(0, episodes):
+    for i in range(0, episodes+1):
         state = State()
         state_lst = [state]
         state_action = [[state, state.policy]]

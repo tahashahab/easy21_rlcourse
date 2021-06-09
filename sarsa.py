@@ -1,4 +1,4 @@
-from easy21 import State, Environment
+from blackjack_variant import State, Environment
 import time
 from mcc import mcc2
 import matplotlib.pyplot as plt
@@ -63,7 +63,7 @@ def sarsa():
     axes.set(xlabel='Lambda', ylabel='Mean-Squared Error', title='MSE of each Lambda')
     plt.show()
 
-    f, ax = plt.subplots(nrows=2, ncols=1, figsize=(10,6))
+    f, ax = plt.subplots(nrows=2, ncols=1, figsize=(10, 6))
     sns.lineplot(x=np.arange(0, 1000), y=mse_0, ax=ax[0])
     ax[0].set(xlabel='Episodes', ylabel='Mean-Squared Error', title='Lambda = 0,1 Learning Curves')
     ax[0].legend(['Lambda = 0'])

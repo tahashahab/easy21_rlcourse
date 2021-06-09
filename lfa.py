@@ -1,4 +1,4 @@
-from easy21 import *
+from blackjack_variant import *
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
