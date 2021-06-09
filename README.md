@@ -1,6 +1,3 @@
-# Easy 21 Reinforcement Learning Assignment 
-The easy 21 assignment is based on the course taught by Dr. David Silver which can be found here: https://www.davidsilver.uk/teaching/
-
 1) Monte-Carlo Control  
 
 In 100,000 episodes:
@@ -19,7 +16,7 @@ Mean-Squared Error for each λ:
 
 Learning curves for λ=0 and λ=1:
 
-![sarsa_learning_curve](https://user-images.githubusercontent.com/46094772/113767952-45f48380-96ed-11eb-9549-673ca6893b67.png)
+![sarsa_learning_curve](https://user-images.githubusercontent.com/46094772/120738870-922a2d00-c4be-11eb-9077-856e0a37d40a.png)
 
 3) Sarsa(λ) with Linear Function Approximation
 
